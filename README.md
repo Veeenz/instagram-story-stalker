@@ -23,6 +23,13 @@ $ python3 main.py
 ## How does it work?
 Actually there isn't a full control with telegram. You can add pages to stalk by running method "a.addPage(pageName)" inside main script. It will be improved.
 
+# TODO
+
+- [ ] Adding accounts with telegram
+- [ ] Removing accounts with telegram
+- [ ] Earth (Orbit/Moon)
+- [ ] Handle other errors
+
 
 ## It's a beta, It'll be improved :)
 Enjoy
