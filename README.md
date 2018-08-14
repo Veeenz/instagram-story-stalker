@@ -9,8 +9,8 @@ You need to install MongoDB before trying to run and create config.json file.
 The config.json file has the following syntax:
 ```
 {
-    "token": "608599861:AAGEEHlAqa5j2vmoTeQT1IjU34Mw4BTRUTw",
-    "adminId": "48968121"
+    "token": "",
+    "adminId": ""
 }
 ```
 
