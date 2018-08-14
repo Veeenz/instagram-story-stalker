@@ -1,16 +1,23 @@
 
-from util import success, fail
+from util import success, fail, notify
 import time
 from Database import Database
 import threading
+import json
+
+import logging
+with open('config.json', 'r') as target:
+        config = json.loads(target.read())
+logging.basicConfig(
+    level=logging.DEBUG,
+    format="[%(levelname)s] %(name)s: %(message)s"
+    )
+logger = logging.getLogger('STALKER')
+
+
 db = Database('stories')
 
 def extractData(story):
-    """story = story.replace("'",'"')
-    story = story.replace("False","false")
-    story = story.replace("True","true")
-    story = story.replace("None",'""')
-    story = story.split('"video_dash_manifest"')[0][:-2]+'}]}'"""
     items = story['items']
     validVideoVersion = ''
     stories = []
@@ -32,7 +39,8 @@ def extractData(story):
         stories.append(data)
     return stories
             
-
+def parseStory(story, owner):
+    return "New story of {}, it is a {}!\n\nDownload not available yet!\n\nUrl: {}".format(owner, story["type"], story["url"])
 
 class Stalker(object):
     def __init__(self, istance):
@@ -49,48 +57,57 @@ class Stalker(object):
         self.pendingPages = [page for page in db.fetch('pages','','',True)]
         return success('Pages loaded: {}'.format(len(self.pendingPages)), data=self.pendingPages)
     
-    def addPage(self, page):
-        self.istance.searchUsername(page)
+    def addPage(self, pageName):
+        self.istance.searchUsername(pageName)
         if self.istance.LastJson['status'] == 'fail':
+            logger.error("There was an error while getting userid")
+            notify('There was an error while getting userid', config["adminId"])
             return fail(self.istance.LastJson['message'])
-
-        if db.fetch('pages','page',page) != None:
-            return fail('Page {} already registered!'.format(page))
+        
+        if db.fetch('pages','page',pageName) != None:
+            return fail('Page {} already registered!'.format(pageName))
         data = {
-            'page': page,
+            'page': pageName,
             'stories': [],
             'created_at': str(time.time()),
-            'userid': self.istance.LastJson['user']['pk']
+            'userid': str(self.istance.LastJson['user']['pk']),
+            'referenceId': ''
         }
         if db.save('pages', data):
-            self.pendingPages.append(page)
-            return success('Page {} registered'.format(page))
-        return fail('Page {} not registered cause database error'.format(page))
+            self.pendingPages.append(pageName)
+            logger.info('Registered {}'.format(pageName))
+            return success('Page {} registered'.format(pageName))
+        return fail('Page {} not registered cause database error'.format(pageName))
         
     def startStalking(self):                   
-        if len(self.pendingPages) == 0:
-            return
-        print(self.pendingPages)
-        page = self.pendingPages.pop()   
-         
-        threading.Thread(target=self.stalk, args=(page,)).start()
+        while True:
+            if len(self.pendingPages) == 0:
+                return            
+            page = self.pendingPages.pop()               
+            threading.Thread(target=self.stalk, args=(page,)).start()
             
 
     def stalk(self, page):
         pageName = page['page']
-        print('Starting {} thread now'.format(pageName))
+        logger.debug('Starting {} thread now'.format(pageName))
         self.alivePages.append(page)
-        print(self.pendingPages)
+        
         while True:
-            print('Monitoring {} now...'.format(pageName))
-            story = self.getStory(page['userid'])
-            with open('story','w') as target:
-                target.write(str(story))
-            data = extractData(story)
+            logger.debug('Monitoring {} now...'.format(pageName))
+            story = self.getStory(page['userid'])            
+            data = extractData(story)            
             if data != []:
                 stories = [story for story in db.fetch('pages', 'page', pageName)['stories']]
                 storiesId = [story['id'] for story in stories]
                 for d in data:
                     if d['id'] not in storiesId:
+                        logger.info('Story to add: {}'.format(d))
+                        if page['referenceId'] == "":
+                            logger.info("Cannot notify, referenceId is empty. I'm notifying it to admin (it is a debug feature, everyone must have a referenceId in future)")
+                            notify(parseStory(d, pageName), config["adminId"])
+                        else:
+                            notify(parseStory(d, pageName), page['referenceId'])
                         db.append('pages','page',pageName,'stories', d)
-            time.sleep(10)
+            timeToSleep = 60*5
+            logger.debug('[page:{}] Waiting {} seconds'.format(pageName, timeToSleep))
+            time.sleep(timeToSleep)
