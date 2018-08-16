@@ -47,6 +47,7 @@ class Stalker(object):
         self.pages = []
         self.pendingPages = []
         self.alivePages = []
+        self.deadPages = []
         self.istance = istance
         pass
     def getStory(self, userid):
@@ -57,7 +58,7 @@ class Stalker(object):
         self.pendingPages = [page for page in db.fetch('pages','','',True)]
         return success('Pages loaded: {}'.format(len(self.pendingPages)), data=self.pendingPages)
     
-    def addPage(self, pageName):
+    def addPage(self, pageName, referenceId=''):
         self.istance.searchUsername(pageName)
         if self.istance.LastJson['status'] == 'fail':
             logger.error("There was an error while getting userid")
@@ -71,28 +72,43 @@ class Stalker(object):
             'stories': [],
             'created_at': str(time.time()),
             'userid': str(self.istance.LastJson['user']['pk']),
-            'referenceId': ''
+            'referenceId': str(referenceId)
         }
         if db.save('pages', data):
-            self.pendingPages.append(pageName)
+            self.pendingPages.append(data)
             logger.info('Registered {}'.format(pageName))
             return success('Page {} registered'.format(pageName))
         return fail('Page {} not registered cause database error'.format(pageName))
         
+    def removePage(self, pageName):
+        if db.fetch('pages','page',pageName) == None:
+            return success("Page {} wasn't monitored".format(pageName)) # it is anyway a success
+        db.delete('pages', 'page', pageName)
+        self.deadPages.append(pageName)
+        if pageName in self.alivePages:
+            self.alivePages.remove(pageName)
+        else:
+            logger.error('There was an error, {} was not in alivePages. It is a bug'.format(pageName))
+        return success('Page {} removed'.format(pageName))
     def startStalking(self):                   
         while True:
             if len(self.pendingPages) == 0:
                 return            
             page = self.pendingPages.pop()               
             threading.Thread(target=self.stalk, args=(page,)).start()
-            
+    
+    def getAlivePages(self):
+        return self.alivePages
 
     def stalk(self, page):
         pageName = page['page']
         logger.debug('Starting {} thread now'.format(pageName))
-        self.alivePages.append(page)
+        self.alivePages.append(pageName)
         
         while True:
+            if pageName in self.deadPages:
+                logger.debug('Closing thread for account {}. It has been removed from stalking'.format(pageName))
+                return #Close thread
             logger.debug('Monitoring {} now...'.format(pageName))
             story = self.getStory(page['userid'])            
             data = extractData(story)            
@@ -108,6 +124,6 @@ class Stalker(object):
                         else:
                             notify(parseStory(d, pageName), page['referenceId'])
                         db.append('pages','page',pageName,'stories', d)
-            timeToSleep = 60*5
+            timeToSleep = 5
             logger.debug('[page:{}] Waiting {} seconds'.format(pageName, timeToSleep))
             time.sleep(timeToSleep)
