@@ -9,8 +9,12 @@ You need to install MongoDB before trying to run and create config.json file.
 The config.json file has the following syntax:
 ```
 {
-    "token": "",
-    "adminId": ""
+    "token": "608599861:AAHrLZVOXeKr48k5qSPN9N-ChXy3Fhr2-KQ",
+    "adminId": "48968121",
+    "instance": {
+        "username": "",
+        "password": ""
+    }
 }
 ```
 
@@ -27,7 +31,7 @@ Actually there isn't a full control with telegram. You can add pages to stalk by
 
 - [ ] Adding accounts with telegram
 - [ ] Removing accounts with telegram
-- [ ] Earth (Orbit/Moon)
+- [ ] Rewrite lite InstagramAPI for stories
 - [ ] Handle other errors
 
 
