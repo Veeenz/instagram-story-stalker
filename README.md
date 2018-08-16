@@ -29,8 +29,8 @@ Actually there isn't a full control with telegram. You can add pages to stalk by
 
 # TODO
 
-- [ ] Adding accounts with telegram
-- [ ] Removing accounts with telegram
+- [x] Adding accounts with telegram
+- [x] Removing accounts with telegram
 - [ ] Rewrite lite InstagramAPI for stories
 - [ ] Handle other errors
 
