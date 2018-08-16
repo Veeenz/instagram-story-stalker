@@ -3,12 +3,11 @@ import pickle
 from Stalker import Stalker
 username = ''
 password = ''
-def getStory(account, userid):
-    account.SendRequest('feed/user/' + str(userid) + '/reel_media/')
 account = InstagramAPI(username, password)
 account.login()
-
-
-a = Stalker(account)
-a.loadAllPages()
-a.startStalking()
+if account.LastJson['status'] == 'fail':
+    print('Cannot login, {}'.format(account.LastJson['message']))
+else:
+    
+    with open('session.pkl', 'wb') as target:
+        pickle.dump(account, target)

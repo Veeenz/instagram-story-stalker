@@ -12,3 +12,13 @@ def notify(msg, chatid):
     sendMessageUrl = 'https://api.telegram.org/bot{}/sendMessage?text={}&chat_id={}'
     req = requests.get(sendMessageUrl.format(token, msg, chatid), timeout=3)
     return req
+
+    
+def loadSession():
+    import pickle
+    try:
+        with open('session.pkl','rb') as target:
+            session = pickle.load(target)
+        return success('Session file found', session)
+    except FileNotFoundError:
+        return fail('Session file not found')
