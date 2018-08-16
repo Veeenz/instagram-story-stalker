@@ -5,7 +5,7 @@ import json
 with open('config.json') as target:
     config = json.loads(target)
 username = config['instance']['username']
-password = config['instnace']['username']
+password = config['instance']['username']
 account = InstagramAPI(username, password)
 account.login()
 if account.LastJson['status'] == 'fail':
