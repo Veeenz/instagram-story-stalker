@@ -21,7 +21,7 @@ The config.json file has the following syntax:
 
 In order to install this script, you need to run:
 ```
-$ pip3 install requests InstagramAPI pymongo
+$ pip3 install requests InstagramAPI pymongo python-telegram-bot
 $ python3 main.py
 ```
 
