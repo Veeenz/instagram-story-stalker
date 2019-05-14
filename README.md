@@ -1,6 +1,7 @@
-# Instagram story stalker
+# Instagram story & posts stalker
 
-Instagram story stalker is a tool which notifies you with a message on telegram whenever someone of your contacts adds a story.
+Instagram story & posts stalker is a tool which notifies you with a message on telegram whenever someone of your contacts adds a story or post.
+This extends the original repo with the ability to track posts as well.
 ### But why?
 Mmh, I don't know. Fun, maybe?
 

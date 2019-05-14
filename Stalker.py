@@ -17,7 +17,7 @@ logger = logging.getLogger('STALKER')
 
 db = Database('stories')
 
-def extractData(story):
+def extractStoryData(story):
     items = story['items']
     validVideoVersion = ''
     stories = []
@@ -38,9 +38,34 @@ def extractData(story):
                 data = {'type': 'image', 'id': str(item['pk']), 'url': validImageVersion['url']}
         stories.append(data)
     return stories
-            
+
+def extractPostData(post):
+    items = post['items']
+    posts = []
+    for item in items:
+        if (item['caption'] != None):
+            if 'video_versions' in item:
+                height = 0
+                for video in item['video_versions']:
+                    if video['height'] > height:
+                        validVideoVersion = video
+                        height = video['height']
+                data = {'type': 'video', 'id': str(item['caption']['media_id']), 'url': validVideoVersion['url']}
+                posts.append(data)
+            elif 'image_versions2' in item:
+                height = 0
+                for image in item['image_versions2']['candidates']:
+                    if image['height'] > height:
+                        validImageVersion = image
+                        height = image['height']
+                    data = {'type': 'image', 'id': str(item['caption']['media_id']), 'url': validImageVersion['url']}
+                posts.append(data)
+    return posts
+
 def parseStory(story, owner):
     return "New story of {}, it is a {}!\n\nDownload not available yet!\n\nUrl: {}".format(owner, story["type"], story["url"])
+def parsePost(post, owner):
+    return "New post of {}, it is a {}!\n\nDownload not available yet!\n\nUrl: {}".format(owner, post["type"], post["url"])
 
 class Stalker(object):
     def __init__(self, istance):
@@ -52,6 +77,9 @@ class Stalker(object):
         pass
     def getStory(self, userid):
         self.istance.SendRequest('feed/user/' + str(userid) + '/reel_media/')
+        return self.istance.LastJson
+    def getPost(self, userid):
+        self.istance.getUserFeed(userid)
         return self.istance.LastJson
 
     def loadAllPages(self):
@@ -70,6 +98,7 @@ class Stalker(object):
         data = {
             'page': pageName,
             'stories': [],
+            'posts': [],
             'created_at': str(time.time()),
             'userid': str(self.istance.LastJson['user']['pk']),
             'referenceId': str(referenceId)
@@ -95,12 +124,13 @@ class Stalker(object):
             if len(self.pendingPages) == 0:
                 return            
             page = self.pendingPages.pop()               
-            threading.Thread(target=self.stalk, args=(page,)).start()
+            threading.Thread(target=self.stalkStories, args=(page,)).start()
+            threading.Thread(target=self.stalkPosts, args=(page,)).start()
     
     def getAlivePages(self):
         return self.alivePages
 
-    def stalk(self, page):
+    def stalkStories(self, page):
         pageName = page['page']
         logger.debug('Starting {} thread now'.format(pageName))
         self.alivePages.append(pageName)
@@ -109,9 +139,9 @@ class Stalker(object):
             if pageName in self.deadPages:
                 logger.debug('Closing thread for account {}. It has been removed from stalking'.format(pageName))
                 return #Close thread
-            logger.debug('Monitoring {} now...'.format(pageName))
+            logger.debug('Monitoring stories of {} now...'.format(pageName))
             story = self.getStory(page['userid'])            
-            data = extractData(story)            
+            data = extractStoryData(story)            
             if data != []:
                 stories = [story for story in db.fetch('pages', 'page', pageName)['stories']]
                 storiesId = [story['id'] for story in stories]
@@ -127,3 +157,29 @@ class Stalker(object):
             timeToSleep = 5
             logger.debug('[page:{}] Waiting {} seconds'.format(pageName, timeToSleep))
             time.sleep(timeToSleep)
+
+    def stalkPosts(self, page):
+        pageName = page['page']
+        logger.debug('Starting {} thread now'.format(pageName))
+        while True:
+            if pageName in self.deadPages:
+                logger.debug('Closing thread for account {}. It has been removed from stalking'.format(pageName))
+                return #Close thread
+            logger.debug('Monitoring posts of {} now...'.format(pageName))
+            post = self.getPost(page['userid'])
+            data = extractPostData(post)
+            if data != []:
+                posts = [post for posts in db.fetch('pages', 'page', pageName)['posts']]
+                posts_id = [post['id'] for post in posts]
+                if posts_id == []:
+                    # first run or either totally empty - lets add only first 5
+                    data = data[:5]
+                for d in data:
+                    if d['id'] not in posts_id:
+                        logger.info('Post to add: {}'.format(d))
+                        if page['referenceId'] == "":
+                            logger.info("Cannot notify, referenceId is empty. I'm notifying it to admin (it is a debug feature, everyone must have a referenceId in future)")
+                            notify(parsePost(d, pageName), config["adminId"])
+                        else:
+                            notify(parsePost(d, pageName), page['referenceId'])
+                        db.append('pages','page',pageName,'posts', d)
