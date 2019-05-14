@@ -3,9 +3,9 @@ import pickle
 from Stalker import Stalker
 import json
 with open('config.json') as target:
-    config = json.loads(target)
+    config = json.load(target)
 username = config['instance']['username']
-password = config['instance']['username']
+password = config['instance']['password']
 account = InstagramAPI(username, password)
 account.login()
 if account.LastJson['status'] == 'fail':

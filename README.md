@@ -5,7 +5,7 @@ Instagram story stalker is a tool which notifies you with a message on telegram 
 Mmh, I don't know. Fun, maybe?
 
 ## Getting started
-You need to install MongoDB before trying to run and create config.json file.
+You need to install and run MongoDB (`mongod`) and create config.json file.
 The config.json file has the following syntax:
 ```
 {
@@ -17,15 +17,24 @@ The config.json file has the following syntax:
     }
 }
 ```
+`adminId` is the chat_id of the conversation on Telegram that you want to send to.
 
 In order to install this script, you need to run:
 ```
-$ pip3 install requests InstagramAPI pymongo
+$ pip3 install requests InstagramAPI pymongo python-telegram-bot
 $ python3 main.py
 ```
 
 ## How does it work?
-Actually there isn't a full control with telegram. You can add pages to stalk by running method "a.addPage(pageName)" inside main script. It will be improved.
+Actually there isn't a full control with telegram. It will be improved.
+You can add pages after confirming login by:
+```python
+obj = Stalker(account)
+# obj.addPage("pageName")
+obj.loadAllPages()
+obj.startStalking()
+```
+You only need to add each page to stalk manually once.
 
 # TODO
 
