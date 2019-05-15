@@ -137,7 +137,7 @@ class Stalker(object):
         
         while True:
             if pageName in self.deadPages:
-                logger.debug('Closing thread for account {}. It has been removed from stalking'.format(pageName))
+                logger.debug('Closing stalk stories thread for account {}. It has been removed from stalking'.format(pageName))
                 return #Close thread
             logger.debug('Monitoring stories of {} now...'.format(pageName))
             story = self.getStory(page['userid'])            
@@ -161,20 +161,23 @@ class Stalker(object):
     def stalkPosts(self, page):
         pageName = page['page']
         logger.debug('Starting {} thread now'.format(pageName))
+
         while True:
             if pageName in self.deadPages:
-                logger.debug('Closing thread for account {}. It has been removed from stalking'.format(pageName))
+                logger.debug('Closing stalk posts thread for account {}. It has been removed from stalking'.format(pageName))
                 return #Close thread
             logger.debug('Monitoring posts of {} now...'.format(pageName))
             post = self.getPost(page['userid'])
             data = extractPostData(post)
             if data != []:
-                posts = [post for posts in db.fetch('pages', 'page', pageName)['posts']]
-                posts_id = [post['id'] for post in posts]
-                if posts_id == []:
-                    # first run or either totally empty - lets add only first 5
-                    data = data[:5]
+                posts = [p for p in post['items'] for posts in db.fetch('pages', 'page', pageName)['posts']]
+                posts_id = []
+                for p in posts:
+                    posts_id.append(p["id"].split("_")[0])
+                # let's grab only first few
+                data = data[:5]
                 for d in data:
+                    d['id'] = d['id'].split("_")[0]
                     if d['id'] not in posts_id:
                         logger.info('Post to add: {}'.format(d))
                         if page['referenceId'] == "":
@@ -183,3 +186,6 @@ class Stalker(object):
                         else:
                             notify(parsePost(d, pageName), page['referenceId'])
                         db.append('pages','page',pageName,'posts', d)
+            timeToSleep = 5
+            logger.debug('[page:{}] Waiting {} seconds'.format(pageName, timeToSleep))
+            time.sleep(timeToSleep)
