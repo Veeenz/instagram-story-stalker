@@ -154,7 +154,7 @@ class Stalker(object):
                         else:
                             notify(parseStory(d, pageName), page['referenceId'])
                         db.append('pages','page',pageName,'stories', d)
-            timeToSleep = 5
+            timeToSleep = 20
             logger.debug('[page:{}] Waiting {} seconds'.format(pageName, timeToSleep))
             time.sleep(timeToSleep)
 
@@ -186,6 +186,6 @@ class Stalker(object):
                         else:
                             notify(parsePost(d, pageName), page['referenceId'])
                         db.append('pages','page',pageName,'posts', d)
-            timeToSleep = 5
+            timeToSleep = 20
             logger.debug('[page:{}] Waiting {} seconds'.format(pageName, timeToSleep))
             time.sleep(timeToSleep)
