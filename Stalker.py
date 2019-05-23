@@ -14,7 +14,6 @@ logging.basicConfig(
     )
 logger = logging.getLogger('STALKER')
 
-
 db = Database('stories')
 
 def extractStoryData(story):
@@ -75,9 +74,11 @@ class Stalker(object):
         self.deadPages = []
         self.istance = istance
         pass
+
     def getStory(self, userid):
         self.istance.SendRequest('feed/user/' + str(userid) + '/reel_media/')
         return self.istance.LastJson
+
     def getPost(self, userid):
         self.istance.getUserFeed(userid)
         return self.istance.LastJson
@@ -119,6 +120,7 @@ class Stalker(object):
         else:
             logger.error('There was an error, {} was not in alivePages. It is a bug'.format(pageName))
         return success('Page {} removed'.format(pageName))
+
     def startStalking(self):
         while True:
             if len(self.pendingPages) == 0:

@@ -8,6 +8,7 @@ username = config['instance']['username']
 password = config['instance']['password']
 account = InstagramAPI(username, password)
 account.login()
+
 if account.LastJson['status'] == 'fail':
     print('Cannot login, {}'.format(account.LastJson['message']))
 else:
