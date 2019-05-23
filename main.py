@@ -11,6 +11,9 @@ account.login()
 if account.LastJson['status'] == 'fail':
     print('Cannot login, {}'.format(account.LastJson['message']))
 else:
-    
+    obj = Stalker(account)
+    # obj.addPage("")
+    obj.loadAllPages()
+    obj.startStalking()
     with open('session.pkl', 'wb') as target:
         pickle.dump(account, target)

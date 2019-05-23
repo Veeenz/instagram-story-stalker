@@ -28,12 +28,10 @@ $ python3 main.py
 
 ## How does it work?
 Actually there isn't a full control with telegram. It will be improved.
-You can add pages after confirming login by:
+You can add pages in `main.py` manually:
 ```python
-obj = Stalker(account)
-# obj.addPage("pageName")
-obj.loadAllPages()
-obj.startStalking()
+obj.addPage("pageName1")
+obj.addPage("pageName2")
 ```
 You only need to add each page to stalk manually once.
 

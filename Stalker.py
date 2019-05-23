@@ -85,14 +85,14 @@ class Stalker(object):
     def loadAllPages(self):
         self.pendingPages = [page for page in db.fetch('pages','','',True)]
         return success('Pages loaded: {}'.format(len(self.pendingPages)), data=self.pendingPages)
-    
+
     def addPage(self, pageName, referenceId=''):
         self.istance.searchUsername(pageName)
         if self.istance.LastJson['status'] == 'fail':
             logger.error("There was an error while getting userid")
             notify('There was an error while getting userid', config["adminId"])
             return fail(self.istance.LastJson['message'])
-        
+
         if db.fetch('pages','page',pageName) != None:
             return fail('Page {} already registered!'.format(pageName))
         data = {
@@ -108,7 +108,7 @@ class Stalker(object):
             logger.info('Registered {}'.format(pageName))
             return success('Page {} registered'.format(pageName))
         return fail('Page {} not registered cause database error'.format(pageName))
-        
+
     def removePage(self, pageName):
         if db.fetch('pages','page',pageName) == None:
             return success("Page {} wasn't monitored".format(pageName)) # it is anyway a success
@@ -119,29 +119,33 @@ class Stalker(object):
         else:
             logger.error('There was an error, {} was not in alivePages. It is a bug'.format(pageName))
         return success('Page {} removed'.format(pageName))
-    def startStalking(self):                   
+    def startStalking(self):
         while True:
             if len(self.pendingPages) == 0:
-                return            
-            page = self.pendingPages.pop()               
+                return
+            page = self.pendingPages.pop()
             threading.Thread(target=self.stalkStories, args=(page,)).start()
             threading.Thread(target=self.stalkPosts, args=(page,)).start()
-    
+
     def getAlivePages(self):
         return self.alivePages
 
     def stalkStories(self, page):
         pageName = page['page']
-        logger.debug('Starting {} thread now'.format(pageName))
+        logger.debug('Starting {} story thread now'.format(pageName))
         self.alivePages.append(pageName)
-        
+
         while True:
             if pageName in self.deadPages:
                 logger.debug('Closing stalk stories thread for account {}. It has been removed from stalking'.format(pageName))
                 return #Close thread
             logger.debug('Monitoring stories of {} now...'.format(pageName))
-            story = self.getStory(page['userid'])            
-            data = extractStoryData(story)            
+            try:
+                story = self.getStory(page['userid'])
+            except:
+                logger.error("Unable to get story - closing thread")
+                return
+            data = extractStoryData(story)
             if data != []:
                 stories = [story for story in db.fetch('pages', 'page', pageName)['stories']]
                 storiesId = [story['id'] for story in stories]
@@ -160,14 +164,18 @@ class Stalker(object):
 
     def stalkPosts(self, page):
         pageName = page['page']
-        logger.debug('Starting {} thread now'.format(pageName))
+        logger.debug('Starting {} post thread now'.format(pageName))
 
         while True:
             if pageName in self.deadPages:
                 logger.debug('Closing stalk posts thread for account {}. It has been removed from stalking'.format(pageName))
                 return #Close thread
             logger.debug('Monitoring posts of {} now...'.format(pageName))
-            post = self.getPost(page['userid'])
+            try:
+                post = self.getPost(page['userid'])
+            except:
+                logger.error("Unable to get posts - closing thread") # maybe keep trying until success?
+                return
             data = extractPostData(post)
             if data != []:
                 posts = [p for p in post['items'] for posts in db.fetch('pages', 'page', pageName)['posts']]
