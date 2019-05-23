@@ -1,6 +1,6 @@
-# Instagram story stalker
+# Instagram story & posts stalker
 
-Instagram story stalker is a tool which notifies you with a message on telegram whenever someone of your contacts adds a story.
+Instagram story & posts stalker is a tool which notifies you with a message on telegram whenever someone of your contacts adds a story or post.
 ### But why?
 Mmh, I don't know. Fun, maybe?
 
@@ -11,6 +11,8 @@ The config.json file has the following syntax:
 {
     "token": "608599861:AAHrLZVOXeKr48k5qSPN9N-ChXy3Fhr2-KQ",
     "adminId": "48968121",
+    "onlyPosts": false,
+    "onlyStories": false,
     "instance": {
         "username": "",
         "password": ""
@@ -27,12 +29,10 @@ $ python3 main.py
 
 ## How does it work?
 Actually there isn't a full control with telegram. It will be improved.
-You can add pages after confirming login by:
+You can add pages in `main.py` manually:
 ```python
-obj = Stalker(account)
-# obj.addPage("pageName")
-obj.loadAllPages()
-obj.startStalking()
+obj.addPage("pageName1")
+obj.addPage("pageName2")
 ```
 You only need to add each page to stalk manually once.
 
