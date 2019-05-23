@@ -1,7 +1,6 @@
 # Instagram story & posts stalker
 
 Instagram story & posts stalker is a tool which notifies you with a message on telegram whenever someone of your contacts adds a story or post.
-This extends the original repo with the ability to track posts as well.
 ### But why?
 Mmh, I don't know. Fun, maybe?
 
@@ -12,6 +11,8 @@ The config.json file has the following syntax:
 {
     "token": "608599861:AAHrLZVOXeKr48k5qSPN9N-ChXy3Fhr2-KQ",
     "adminId": "48968121",
+    "onlyPosts": false,
+    "onlyStories": false,
     "instance": {
         "username": "",
         "password": ""

@@ -124,8 +124,16 @@ class Stalker(object):
             if len(self.pendingPages) == 0:
                 return
             page = self.pendingPages.pop()
-            threading.Thread(target=self.stalkStories, args=(page,)).start()
-            threading.Thread(target=self.stalkPosts, args=(page,)).start()
+            if (config["onlyStories"] and config["onlyPosts"]):
+                logger.error("Can't have onlyStroies and onlyPosts as true - exiting")
+                return
+            elif (config["onlyPosts"]):
+                threading.Thread(target=self.stalkPosts, args=(page,)).start()
+            elif (config["onlyStories"]):
+                threading.Thread(target=self.stalkStories, args=(page,)).start()
+            else:
+                threading.Thread(target=self.stalkStories, args=(page,)).start()
+                threading.Thread(target=self.stalkPosts, args=(page,)).start()
 
     def getAlivePages(self):
         return self.alivePages
